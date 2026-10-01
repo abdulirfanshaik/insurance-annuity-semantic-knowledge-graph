@@ -1,0 +1,3 @@
+PREFIX ia: <https://example.org/insurance-annuity#>
+SELECT ?contract ?status ?transaction
+WHERE { ?contract a ia:AnnuityContract ; ia:contractStatus ?status . OPTIONAL { ?contract ia:hasTransaction ?transaction } }

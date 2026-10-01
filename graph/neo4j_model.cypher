@@ -1,0 +1,10 @@
+CREATE (owner:Person {partyId:1,name:'Ava Morgan'});
+CREATE (beneficiary1:Person {partyId:3,name:'Emma Morgan'});
+CREATE (beneficiary2:Person {partyId:4,name:'Noah Morgan'});
+CREATE (product:AnnuityProduct {productId:101,name:'Secure Horizon Fixed Annuity'});
+CREATE (contract:AnnuityContract {contractId:1001,number:'ANN-100001',status:'ACTIVE'});
+CREATE (contract)-[:HAS_OWNER]->(owner);
+CREATE (contract)-[:HAS_ANNUITANT]->(owner);
+CREATE (contract)-[:HAS_BENEFICIARY {allocationPct:60.0}]->(beneficiary1);
+CREATE (contract)-[:HAS_BENEFICIARY {allocationPct:40.0}]->(beneficiary2);
+CREATE (contract)-[:HAS_PRODUCT]->(product);

@@ -1,0 +1,3 @@
+PREFIX ia: <https://example.org/insurance-annuity#>
+SELECT ?contract ?producer ?agency
+WHERE { ?contract ia:servicedByProducer ?producer . ?producer ia:affiliatedWithAgency ?agency . }

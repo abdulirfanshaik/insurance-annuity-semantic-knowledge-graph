@@ -1,0 +1,49 @@
+@prefix ia: <https://example.org/insurance-annuity#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ia:InsuranceAnnuityOntology a owl:Ontology .
+
+ia:Party a owl:Class .
+ia:Person a owl:Class ; rdfs:subClassOf ia:Party .
+ia:Product a owl:Class .
+ia:InsuranceProduct a owl:Class ; rdfs:subClassOf ia:Product .
+ia:AnnuityProduct a owl:Class ; rdfs:subClassOf ia:Product .
+ia:Contract a owl:Class .
+ia:InsurancePolicy a owl:Class ; rdfs:subClassOf ia:Contract .
+ia:AnnuityContract a owl:Class ; rdfs:subClassOf ia:Contract .
+ia:Producer a owl:Class .
+ia:Agency a owl:Class .
+ia:Rider a owl:Class .
+ia:ContractTransaction a owl:Class .
+ia:Contribution a owl:Class ; rdfs:subClassOf ia:ContractTransaction .
+ia:Withdrawal a owl:Class ; rdfs:subClassOf ia:ContractTransaction .
+ia:Distribution a owl:Class ; rdfs:subClassOf ia:ContractTransaction .
+ia:Claim a owl:Class .
+ia:UnderwritingCase a owl:Class .
+
+ia:hasOwner a owl:ObjectProperty ; rdfs:domain ia:Contract ; rdfs:range ia:Party .
+ia:hasAnnuitant a owl:ObjectProperty ; rdfs:domain ia:AnnuityContract ; rdfs:range ia:Person .
+ia:hasBeneficiary a owl:ObjectProperty ; rdfs:domain ia:Contract ; rdfs:range ia:Party .
+ia:hasProduct a owl:ObjectProperty ; rdfs:domain ia:Contract ; rdfs:range ia:Product .
+ia:servicedByProducer a owl:ObjectProperty ; rdfs:domain ia:Contract ; rdfs:range ia:Producer .
+ia:affiliatedWithAgency a owl:ObjectProperty ; rdfs:domain ia:Producer ; rdfs:range ia:Agency .
+ia:hasTransaction a owl:ObjectProperty ; rdfs:domain ia:Contract ; rdfs:range ia:ContractTransaction .
+ia:hasRider a owl:ObjectProperty ; rdfs:domain ia:Contract ; rdfs:range ia:Rider .
+ia:hasClaim a owl:ObjectProperty ; rdfs:domain ia:Contract ; rdfs:range ia:Claim .
+ia:hasUnderwritingCase a owl:ObjectProperty ; rdfs:domain ia:Contract ; rdfs:range ia:UnderwritingCase .
+
+ia:contractNumber a owl:DatatypeProperty ; rdfs:domain ia:Contract ; rdfs:range xsd:string .
+ia:contractStatus a owl:DatatypeProperty ; rdfs:domain ia:Contract ; rdfs:range xsd:string .
+ia:allocationPercent a owl:DatatypeProperty ; rdfs:range xsd:decimal .
+ia:transactionAmount a owl:DatatypeProperty ; rdfs:domain ia:ContractTransaction ; rdfs:range xsd:decimal .
+
+# Synthetic example instances
+ia:Contract1001 a ia:AnnuityContract ; ia:contractNumber "ANN-100001" ; ia:contractStatus "ACTIVE" ;
+  ia:hasOwner ia:Party1 ; ia:hasAnnuitant ia:Party1 ; ia:hasBeneficiary ia:Party3, ia:Party4 ; ia:hasProduct ia:Product101 .
+ia:Party1 a ia:Person .
+ia:Party3 a ia:Person .
+ia:Party4 a ia:Person .
+ia:Product101 a ia:AnnuityProduct .

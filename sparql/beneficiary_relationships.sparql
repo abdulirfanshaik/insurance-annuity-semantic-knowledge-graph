@@ -1,0 +1,3 @@
+PREFIX ia: <https://example.org/insurance-annuity#>
+SELECT ?contract ?beneficiary
+WHERE { ?contract a ia:Contract ; ia:hasBeneficiary ?beneficiary . }

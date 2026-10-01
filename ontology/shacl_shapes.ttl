@@ -1,0 +1,13 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix ia: <https://example.org/insurance-annuity#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ia:ContractShape a sh:NodeShape ;
+  sh:targetClass ia:Contract ;
+  sh:property [ sh:path ia:contractNumber ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path ia:hasProduct ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path ia:hasOwner ; sh:minCount 1 ] .
+
+ia:AnnuityContractShape a sh:NodeShape ;
+  sh:targetClass ia:AnnuityContract ;
+  sh:property [ sh:path ia:hasAnnuitant ; sh:minCount 1 ] .
