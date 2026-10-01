@@ -12,14 +12,14 @@ permissions:
 
 jobs:
   validate-project:
-    name: Validate Insurance Annuity Project
+    name: Validate Entire Insurance Annuity Repository
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Verify required project files
+      - name: Verify all expected project files
         shell: bash
         run: |
           set -euo pipefail
@@ -27,6 +27,8 @@ jobs:
           required_files=(
             "README.md"
             "INTERVIEW_GUIDE.md"
+            ".gitignore"
+            "LICENSE"
             "docs/business_problem.md"
             "docs/insurance_annuity_domain.md"
             "docs/conceptual_model.md"
@@ -64,17 +66,71 @@ jobs:
               echo "Missing required file: $file"
               exit 1
             fi
+            if [[ ! -s "$file" ]]; then
+              echo "File is empty: $file"
+              exit 1
+            fi
           done
 
-          echo "All required project files are present."
+          echo "All expected files are present and non-empty."
 
-      - name: Validate key semantic content
+      - name: Validate every uploaded project file
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          count=0
+          while IFS= read -r -d '' file; do
+            case "$file" in
+              ./.git/*|./.github/workflows/project-validation.yml)
+                continue
+                ;;
+            esac
+
+            if [[ ! -s "$file" ]]; then
+              echo "Empty uploaded file detected: $file"
+              exit 1
+            fi
+
+            count=$((count + 1))
+            echo "OK: $file"
+          done < <(find . -type f -print0)
+
+          if [[ "$count" -lt 1 ]]; then
+            echo "No project files found."
+            exit 1
+          fi
+
+          echo "Validated $count uploaded project files."
+
+      - name: Validate SQL project assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Eqi "create[[:space:]]+table" sql/create_tables.sql
+          grep -Eqi "insert[[:space:]]+into" sql/sample_data.sql
+          grep -Eqi "select" sql/data_quality_checks.sql
+          grep -Eqi "select" sql/reconciliation_queries.sql
+          echo "SQL checks passed."
+
+      - name: Validate ontology and graph assets
         shell: bash
         run: |
           set -euo pipefail
           grep -q "owl:Ontology" ontology/insurance_annuity_ontology.ttl
           grep -q "sh:NodeShape" ontology/shacl_shapes.ttl
-          grep -qi "annuity" README.md
+          grep -Eqi "SELECT" sparql/customer_contracts.sparql
+          grep -Eqi "MATCH|CREATE" graph/neo4j_model.cypher
+          echo "Ontology and graph checks passed."
+
+      - name: Validate documentation coverage
+        shell: bash
+        run: |
+          set -euo pipefail
           grep -qi "insurance" README.md
+          grep -qi "annuity" README.md
           grep -qi "independent" README.md
-          echo "Semantic project checks passed."
+          grep -qi "interview" INTERVIEW_GUIDE.md
+          grep -qi "GraphRAG" ai/graphrag_design.md
+          grep -qi "Iceberg" aws/s3_iceberg_architecture.md
+          echo "Documentation checks passed."
