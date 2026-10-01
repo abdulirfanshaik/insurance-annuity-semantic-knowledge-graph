@@ -11,126 +11,165 @@ permissions:
   contents: read
 
 jobs:
-  validate-project:
-    name: Validate Entire Insurance Annuity Repository
+  root-files:
+    name: Root Files
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Verify all expected project files
-        shell: bash
+      - uses: actions/checkout@v4
+      - name: Validate root files
         run: |
           set -euo pipefail
-
-          required_files=(
-            "README.md"
-            "INTERVIEW_GUIDE.md"
-            ".gitignore"
-            "LICENSE"
-            "docs/business_problem.md"
-            "docs/insurance_annuity_domain.md"
-            "docs/conceptual_model.md"
-            "docs/logical_model.md"
-            "docs/physical_model.md"
-            "docs/semantic_model.md"
-            "docs/business_glossary.md"
-            "docs/source_to_semantic_mapping.md"
-            "docs/interview_walkthrough.md"
-            "ontology/insurance_annuity_ontology.ttl"
-            "ontology/shacl_shapes.ttl"
-            "ontology/classes.md"
-            "ontology/relationships.md"
-            "sql/create_tables.sql"
-            "sql/sample_data.sql"
-            "sql/data_quality_checks.sql"
-            "sql/reconciliation_queries.sql"
-            "sparql/customer_contracts.sparql"
-            "sparql/beneficiary_relationships.sparql"
-            "sparql/producer_sales.sparql"
-            "sparql/annuity_lifecycle.sparql"
-            "graph/neo4j_model.cypher"
-            "graph/sample_queries.cypher"
-            "aws/s3_iceberg_architecture.md"
-            "aws/physical_asset_mapping.md"
-            "governance/lineage.md"
-            "governance/metadata.md"
-            "governance/model_release_process.md"
-            "ai/graphrag_design.md"
-            "ai/semantic_search_use_case.md"
-          )
-
-          for file in "${required_files[@]}"; do
-            if [[ ! -f "$file" ]]; then
-              echo "Missing required file: $file"
-              exit 1
-            fi
-            if [[ ! -s "$file" ]]; then
-              echo "File is empty: $file"
-              exit 1
-            fi
+          for f in README.md INTERVIEW_GUIDE.md .gitignore LICENSE; do
+            test -s "$f"
           done
-
-          echo "All expected files are present and non-empty."
-
-      - name: Validate every uploaded project file
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          count=0
-          while IFS= read -r -d '' file; do
-            case "$file" in
-              ./.git/*|./.github/workflows/project-validation.yml)
-                continue
-                ;;
-            esac
-
-            if [[ ! -s "$file" ]]; then
-              echo "Empty uploaded file detected: $file"
-              exit 1
-            fi
-
-            count=$((count + 1))
-            echo "OK: $file"
-          done < <(find . -type f -print0)
-
-          if [[ "$count" -lt 1 ]]; then
-            echo "No project files found."
-            exit 1
-          fi
-
-          echo "Validated $count uploaded project files."
-
-      - name: Validate SQL project assets
-        shell: bash
-        run: |
-          set -euo pipefail
-          grep -Eqi "create[[:space:]]+table" sql/create_tables.sql
-          grep -Eqi "insert[[:space:]]+into" sql/sample_data.sql
-          grep -Eqi "select" sql/data_quality_checks.sql
-          grep -Eqi "select" sql/reconciliation_queries.sql
-          echo "SQL checks passed."
-
-      - name: Validate ontology and graph assets
-        shell: bash
-        run: |
-          set -euo pipefail
-          grep -q "owl:Ontology" ontology/insurance_annuity_ontology.ttl
-          grep -q "sh:NodeShape" ontology/shacl_shapes.ttl
-          grep -Eqi "SELECT" sparql/customer_contracts.sparql
-          grep -Eqi "MATCH|CREATE" graph/neo4j_model.cypher
-          echo "Ontology and graph checks passed."
-
-      - name: Validate documentation coverage
-        shell: bash
-        run: |
-          set -euo pipefail
           grep -qi "insurance" README.md
           grep -qi "annuity" README.md
           grep -qi "independent" README.md
           grep -qi "interview" INTERVIEW_GUIDE.md
-          grep -qi "GraphRAG" ai/graphrag_design.md
+          echo "Root files passed."
+
+  docs:
+    name: Docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate docs
+        run: |
+          set -euo pipefail
+          files=(
+            docs/business_problem.md
+            docs/insurance_annuity_domain.md
+            docs/conceptual_model.md
+            docs/logical_model.md
+            docs/physical_model.md
+            docs/semantic_model.md
+            docs/business_glossary.md
+            docs/source_to_semantic_mapping.md
+            docs/interview_walkthrough.md
+          )
+          for f in "${files[@]}"; do test -s "$f"; done
+          grep -qi "Party" docs/logical_model.md
+          grep -qi "semantic" docs/semantic_model.md
+          echo "Docs passed."
+
+  ontology:
+    name: Ontology
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate ontology
+        run: |
+          set -euo pipefail
+          files=(
+            ontology/insurance_annuity_ontology.ttl
+            ontology/shacl_shapes.ttl
+            ontology/classes.md
+            ontology/relationships.md
+          )
+          for f in "${files[@]}"; do test -s "$f"; done
+          grep -q "owl:Ontology" ontology/insurance_annuity_ontology.ttl
+          grep -q "sh:NodeShape" ontology/shacl_shapes.ttl
+          grep -qi "AnnuityContract" ontology/classes.md
+          echo "Ontology passed."
+
+  sql:
+    name: SQL
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate SQL
+        run: |
+          set -euo pipefail
+          files=(
+            sql/create_tables.sql
+            sql/sample_data.sql
+            sql/data_quality_checks.sql
+            sql/reconciliation_queries.sql
+          )
+          for f in "${files[@]}"; do test -s "$f"; done
+          grep -Eqi "create[[:space:]]+table" sql/create_tables.sql
+          grep -Eqi "insert[[:space:]]+into" sql/sample_data.sql
+          grep -Eqi "select" sql/data_quality_checks.sql
+          grep -Eqi "select" sql/reconciliation_queries.sql
+          echo "SQL passed."
+
+  sparql:
+    name: SPARQL
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate SPARQL
+        run: |
+          set -euo pipefail
+          files=(
+            sparql/customer_contracts.sparql
+            sparql/beneficiary_relationships.sparql
+            sparql/producer_sales.sparql
+            sparql/annuity_lifecycle.sparql
+          )
+          for f in "${files[@]}"; do
+            test -s "$f"
+            grep -Eqi "SELECT" "$f"
+          done
+          echo "SPARQL passed."
+
+  graph:
+    name: Graph / Neo4j
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate graph assets
+        run: |
+          set -euo pipefail
+          test -s graph/neo4j_model.cypher
+          test -s graph/sample_queries.cypher
+          grep -Eqi "CREATE" graph/neo4j_model.cypher
+          grep -Eqi "MATCH|RETURN" graph/sample_queries.cypher
+          echo "Graph passed."
+
+  aws:
+    name: AWS / Iceberg
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate AWS docs
+        run: |
+          set -euo pipefail
+          test -s aws/s3_iceberg_architecture.md
+          test -s aws/physical_asset_mapping.md
           grep -qi "Iceberg" aws/s3_iceberg_architecture.md
-          echo "Documentation checks passed."
+          grep -qi "S3" aws/s3_iceberg_architecture.md
+          echo "AWS/Iceberg passed."
+
+  governance:
+    name: Governance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate governance docs
+        run: |
+          set -euo pipefail
+          files=(
+            governance/lineage.md
+            governance/metadata.md
+            governance/model_release_process.md
+          )
+          for f in "${files[@]}"; do test -s "$f"; done
+          grep -qi "lineage" governance/lineage.md
+          grep -qi "metadata" governance/metadata.md
+          grep -qi "release" governance/model_release_process.md
+          echo "Governance passed."
+
+  ai:
+    name: AI / GraphRAG
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate AI docs
+        run: |
+          set -euo pipefail
+          test -s ai/graphrag_design.md
+          test -s ai/semantic_search_use_case.md
+          grep -qi "GraphRAG" ai/graphrag_design.md
+          grep -qi "semantic" ai/semantic_search_use_case.md
+          echo "AI/GraphRAG passed."
