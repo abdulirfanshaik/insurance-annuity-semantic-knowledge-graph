@@ -1,0 +1,80 @@
+name: Project Validation
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-project:
+    name: Validate Insurance Annuity Project
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify required project files
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          required_files=(
+            "README.md"
+            "INTERVIEW_GUIDE.md"
+            "docs/business_problem.md"
+            "docs/insurance_annuity_domain.md"
+            "docs/conceptual_model.md"
+            "docs/logical_model.md"
+            "docs/physical_model.md"
+            "docs/semantic_model.md"
+            "docs/business_glossary.md"
+            "docs/source_to_semantic_mapping.md"
+            "docs/interview_walkthrough.md"
+            "ontology/insurance_annuity_ontology.ttl"
+            "ontology/shacl_shapes.ttl"
+            "ontology/classes.md"
+            "ontology/relationships.md"
+            "sql/create_tables.sql"
+            "sql/sample_data.sql"
+            "sql/data_quality_checks.sql"
+            "sql/reconciliation_queries.sql"
+            "sparql/customer_contracts.sparql"
+            "sparql/beneficiary_relationships.sparql"
+            "sparql/producer_sales.sparql"
+            "sparql/annuity_lifecycle.sparql"
+            "graph/neo4j_model.cypher"
+            "graph/sample_queries.cypher"
+            "aws/s3_iceberg_architecture.md"
+            "aws/physical_asset_mapping.md"
+            "governance/lineage.md"
+            "governance/metadata.md"
+            "governance/model_release_process.md"
+            "ai/graphrag_design.md"
+            "ai/semantic_search_use_case.md"
+          )
+
+          for file in "${required_files[@]}"; do
+            if [[ ! -f "$file" ]]; then
+              echo "Missing required file: $file"
+              exit 1
+            fi
+          done
+
+          echo "All required project files are present."
+
+      - name: Validate key semantic content
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q "owl:Ontology" ontology/insurance_annuity_ontology.ttl
+          grep -q "sh:NodeShape" ontology/shacl_shapes.ttl
+          grep -qi "annuity" README.md
+          grep -qi "insurance" README.md
+          grep -qi "independent" README.md
+          echo "Semantic project checks passed."
